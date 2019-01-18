@@ -11,7 +11,7 @@ import evaluation_handler as eh
 class LSTM(object):
     def __init__(self, args):
         self.args = args
-        self.saver = tf.train.Saver()
+        # self.saver = tf.train.Saver()
     def train(self, data, target):
         data_size = data.shape[0]
         train_count = int(np.ceil(data_size / self.args.batch_size))
@@ -104,8 +104,8 @@ class LSTM(object):
 
         # generating alpha values
         self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
-                                                , activation=tf.nn.softmax, n_layers=self.args.n_layers_a
-                                                , layer_size=self.args.n_hidden_a, reuse=False)
+                                                , activation=tf.nn.softmax, n_layers=self.args.n_layers
+                                                , layer_size=self.args.n_hidden, reuse=False)
 
         # generating c
         t = self.alpha

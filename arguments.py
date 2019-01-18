@@ -21,7 +21,8 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
     parser.add_argument('--model_path', type=str, default=results_path+'/models', help='File path of output images')
     parser.add_argument('--results_path', type=str, default=results_path, help='File path of output images')
 
-    parser.add_argument('--keep_prob', type=float, default=.8, help='rate dropout')
+    parser.add_argument('--keep_prob_cell', type=float, default=.8, help='rate dropout cell')
+    parser.add_argument('--keep_prob_layer', type=float, default=.8, help='rate dropout layer')
 
     parser.add_argument('--n_layers', type=int, default=5, help='Number of hidden layers')
 
