@@ -5,11 +5,11 @@ import numpy as np
 #########################################################################################################
 ######################################### TXT ###########################################################
 
-def saveTxT(data, file_name, column_sec=[]):
+def saveTxT(data, file_name):
     if ".txt" not in file_name: file_name = file_name+".txt"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/data/data/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
     directory = path[:path.rfind('/')]
     if not os.path.isdir(directory):
         makeDirectories(directory)
@@ -21,7 +21,7 @@ def loadTxT(file_name, column_rows=0):
     if ".txt" not in file_name: file_name = file_name+".txt"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/data/data/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
     if not os.path.isfile(path) :
         return None
 
@@ -35,7 +35,7 @@ def saveCSV(data, file_name, column_sec=[]):
     if ".csv" not in file_name: file_name = file_name+".csv"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/resources/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
     directory = path[:path.rfind('/')]
     if not os.path.isdir(directory):
         makeDirectories(directory)
@@ -55,7 +55,7 @@ def loadCSV(file_name, column_rows=0):
     if ".csv" not in file_name: file_name = file_name+".csv"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/resources/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
     if not os.path.isfile(path) :
         return None
     csv_file = open(path, "r")
@@ -80,7 +80,7 @@ def makeDirectories(directory):
     if not os.path.isdir(directory):
         os.makedirs(directory)
 def getStoragePath():
-    StoragePath = os.getcwd().replace('\\', '/')
+    StoragePath = os.getcwd().replace('\\', '/')+'/training_set/N64_T2.300_H0.000/'
     return StoragePath
 
 def clearCaches():

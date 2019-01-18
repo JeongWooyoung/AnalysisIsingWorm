@@ -16,35 +16,33 @@ import learn_handler as lh
 from datetime import datetime
 
 storage_path = fh.getStoragePath()
-def evaluations(args, images_file, target):
-    if not type(target).__module__==np.__name__: target = np.array(target)
+def evaluations(args, data, targets):
+    if not type(data).__module__==np.__name__: data = np.array(data)
+    if not type(targets).__module__==np.__name__: targets = np.array(targets)
 
     kf = KFold(n_splits=10, shuffle=True, random_state=0)
-    shape = [360, 512, 1]
+    shape = data.shape
     results = []
-    for i, (train_index, test_index) in enumerate(kf.split(images_file)):
-        train_images, train_images_data =  fh.loadImages(images_file[train_index], shape=shape)
-        train_target = np.argmax(target[train_index], axis=1)
+    for i, (train_index, test_index) in enumerate(kf.split(data)):
+        train_data, train_target = data[train_index], targets[train_index]
 
-        # cnn.generateModels(shape[0], shape[1], shape[2], target.shape[1])
-        cnn = lh.CNN(args)
-        cnn.generateModels(shape[0], shape[1], shape[2], target.shape[1])
+        lstm = lh.LSTM(args)
+        lstm.generateModels(shape[1], targets.shape[1], shape[2])
         timer = datetime.now()
-        cnn.train(data=train_images_data, target=train_target)
+        loss = lstm.train(data=train_data, target=train_target)
         train_time = datetime.now()-timer
 
-        test_images, test_images_data = fh.loadImages(images_file[test_index], shape=shape)
-        test_target = np.argmax(target[test_index], axis=1)
+        test_data, test_target = data[test_index], targets[test_index]
 
-        e = cnn.evaluation(test_images_data, test_target)
-        print('Eval step {0}. accuracy : {1} loss : {2}, training time : {3}'.format(i+1, e['accuracy'], e['loss'], train_time))
-        results.append([e['accuracy'], e['loss']])
+        predicts, rmse = lstm.predict(test_data)
+        accuracy, precision, recall, f1 = evaluatePredictions(test_target, predicts)
+        print('=====================================================================================================================================================')
+        print('fold %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i + 1, loss, rmse, accuracy, precision, recall, f1))
+        print(train_time)
+        print('=====================================================================================================================================================')
+        results.append([rmse, accuracy, loss])
         fh.clearCaches()
 
-        # predicts = cnn.predict(test_images_data)
-        # accuracy, precision, recall, f1 = evaluatePredictions(test_target, predicts)
-        #
-        # results.append([accuracy, precision, recall, f1])
     return results
 
 def evaluatePredictions(test_labels, predicts):

@@ -2,11 +2,6 @@
 import numpy as np
 import tensorflow as tf
 
-import warnings
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import f1_score
 from datetime import datetime
 
 import evaluation_handler as eh
@@ -16,6 +11,7 @@ import evaluation_handler as eh
 class LSTM(object):
     def __init__(self, args):
         self.args = args
+        self.saver = tf.train.Saver()
     def train(self, data, target):
         data_size = data.shape[0]
         train_count = int(np.ceil(data_size / self.args.batch_size))
@@ -45,13 +41,14 @@ class LSTM(object):
                                                                     , self.KeepProbLayer: self.keep_prob_layer})
                 losses.append(np.mean(np.nan_to_num(loss)))
             if i%10 == 9:
-                predicts, rmse = self.sess.run(self.prediction, feed_dict={self.input: test_data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+                predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
                 accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
                 print('=====================================================================================================================================================')
-                print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), accuracy, precision, recall, f1))
+                print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), rmse, accuracy, precision, recall, f1))
                 print(datetime.now()-start)
                 print('=====================================================================================================================================================')
                 start = datetime.now()
+        return np.mean(losses)
 
     def predict(self, data):
         predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
@@ -87,7 +84,7 @@ class LSTM(object):
             e = []
             for i in range(h.get_shape()[0]) :
                 e.append(activation(tf.matmul(h[i], w) + b)*0.5)
-        return tf.transpose(e, (1, 0, 2))
+        return tf.transpose(e, (1, 0, 2), name=name)
 
     def generateModels(self, input_size, output_size, step_size):
         tf.reset_default_graph()
@@ -106,7 +103,6 @@ class LSTM(object):
         self.v = tf.multiply(w, self.input)
 
         # generating alpha values
-        # rnn for α
         self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
                                                 , activation=tf.nn.softmax, n_layers=self.args.n_layers_a
                                                 , layer_size=self.args.n_hidden_a, reuse=False)
@@ -121,12 +117,39 @@ class LSTM(object):
         w = tf.get_variable("wy", [self.c.get_shape()[1], output_size], initializer=w_init)
         b = tf.get_variable("by", [output_size], initializer=b_init)
 
-        self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b)
+        self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b, name='predict')
 
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate)
-        self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.y)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
+        self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
         # self.loss = -tf.reduce_mean(tf.reduce_mean(self.target*tf.log(self.y)+(1-self.target)*tf.log(1-self.y), 1))
-        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)))
-        self.train_step = self.optimizer.minimize(self.loss)
+        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)), name='rmse')
+        self.train_step = self.optimizer.minimize(self.loss, name='train_step')
 
         self.init_session()
+
+    def save(self, model_path):
+        self.saver.save(self.sess, model_path, global_step=1000)
+    def restore(self, model_path):
+        self.init_session()
+        self.saver = tf.train.import_meta_graph(model_path+'-1000.meta')
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_path[:model_path.rfind('/')+1]))
+
+        graph = tf.get_default_graph()
+        self.input = graph.get_tensor_by_name("input:0")
+        self.target = graph.get_tensor_by_name("target:0")
+
+        self.keep_prob_cell = self.args.keep_prob_cell
+        self.keep_prob_layer = self.args.keep_prob_layer
+        self.KeepProbCell = graph.get_tensor_by_name('KeepProbCell:0')
+        self.KeepProbLayer = graph.get_tensor_by_name('KeepProbLayer:0')
+
+        self.prediction = graph.get_tensor_by_name('predict:0')
+        layer_name = 'layers'
+        self.alpha = graph.get_tensor_by_name('LSTM_%s:%s:0'%(layer_name, layer_name))
+        self.emb = graph.get_tensor_by_name('wv:0')
+        self.wy = graph.get_tensor_by_name('wy:0')
+
+        self.optimizer = graph.get_tensor_by_name("optimizer:0")
+        self.loss = graph.get_tensor_by_name("loss:0")
+        self.rmse = graph.get_tensor_by_name("rmse:0")
+        self.train_step = graph.get_tensor_by_name("train_step:0")
