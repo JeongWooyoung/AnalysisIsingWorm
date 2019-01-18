@@ -1,9 +1,6 @@
 # coding: utf-8
-import pickle
 import numpy as np
 import tensorflow as tf
-
-import file_handler as fh
 
 import warnings
 from sklearn.metrics import accuracy_score
@@ -12,9 +9,11 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from datetime import datetime
 
+import evaluation_handler as eh
+
 #########################################################################################################
 ################################### Retain RNN ##########################################################
-class RetainRNN(object):
+class LSTM(object):
     def __init__(self, args):
         self.args = args
     def train(self, data, target):
@@ -30,8 +29,6 @@ class RetainRNN(object):
         test_data = train_data[:100]
         test_target = target[:100]
 
-        average = 'weighted'
-        pos_label = 1
         start = datetime.now()
         for i in range(self.args.num_epochs):
             losses = []
@@ -48,33 +45,26 @@ class RetainRNN(object):
                                                                     , self.KeepProbLayer: self.keep_prob_layer})
                 losses.append(np.mean(np.nan_to_num(loss)))
             if i%10 == 9:
-                predicts = self.sess.run(self.one_hot_pred, feed_dict={self.input: test_data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    warnings.warn("deprecated", DeprecationWarning)
-                    accuracy = accuracy_score(y_pred=np.argmax(predicts, axis=1), y_true=np.argmax(test_target, axis=1))
-                    precision = precision_score(y_pred=np.argmax(predicts, axis=1), y_true=np.argmax(test_target, axis=1), average=average, pos_label=pos_label)
-                    recall = recall_score(y_pred=np.argmax(predicts, axis=1), y_true=np.argmax(test_target, axis=1), average=average, pos_label=pos_label)
-                    f1 = f1_score(y_pred=np.argmax(predicts, axis=1), y_true=np.argmax(test_target, axis=1), average=average, pos_label=pos_label)
-
-                    print('=====================================================================================================================================================')
-                    print('epoch %d: loss %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), accuracy, precision, recall, f1))
-                    print(datetime.now()-start)
-                    print('=====================================================================================================================================================')
+                predicts, rmse = self.sess.run(self.prediction, feed_dict={self.input: test_data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+                accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
+                print('=====================================================================================================================================================')
+                print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), accuracy, precision, recall, f1))
+                print(datetime.now()-start)
+                print('=====================================================================================================================================================')
                 start = datetime.now()
 
     def predict(self, data):
-        predicts, alpha, beta = self.sess.run((self.one_hot_pred, self.alpha, self.beta), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
-        return predicts, alpha, beta
+        predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+        return predicts, rmse
 
     def init_session(self):
         self.sess = tf.Session()
         tf.global_variables_initializer().run(session=self.sess)
         tf.local_variables_initializer().run(session=self.sess)
 
-    def generateRetainRnnModel(self, name, input, output_size, activation, n_layers, layer_size, reuse):
+    def generateModel(self, name, input, output_size, activation, n_layers, layer_size, reuse):
         def rnn_cell(): return tf.contrib.rnn.BasicRNNCell(layer_size, reuse=reuse)
-        with tf.variable_scope('RNN_'+name, reuse=reuse):
+        with tf.variable_scope('LSTM_'+name, reuse=reuse):
             Cell = tf.contrib.rnn.MultiRNNCell(
                 [tf.contrib.rnn.DropoutWrapper(rnn_cell(), input_keep_prob=self.KeepProbCell) for _ in range(n_layers)]
                 , state_is_tuple=True)
@@ -117,18 +107,12 @@ class RetainRNN(object):
 
         # generating alpha values
         # rnn for α
-        self.alpha = self.generateRetainRnnModel(name='alpha', input=self.v, output_size=1
+        self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
                                                 , activation=tf.nn.softmax, n_layers=self.args.n_layers_a
                                                 , layer_size=self.args.n_hidden_a, reuse=False)
 
-        # generating beta values
-        # rnn for β
-        self.beta = self.generateRetainRnnModel(name='beta', input=self.v, output_size=input_size
-                                                , activation=tf.nn.tanh, n_layers=self.args.n_layers_b
-                                                , layer_size=self.args.n_hidden_b, reuse=False)
-
         # generating c
-        t = tf.multiply(tf.multiply(self.alpha, self.beta), self.v)
+        t = self.alpha
         self.c = tf.reduce_sum(t, 2)
 
         # generating y
@@ -137,14 +121,12 @@ class RetainRNN(object):
         w = tf.get_variable("wy", [self.c.get_shape()[1], output_size], initializer=w_init)
         b = tf.get_variable("by", [output_size], initializer=b_init)
 
-        self.y = tf.nn.softmax(tf.matmul(self.c, w)+b)
-
-        self.prediction = tf.argmax(self.y, axis=1)
-        self.one_hot_pred = tf.one_hot(self.prediction, depth=output_size)
+        self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b)
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate)
         self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.y)
         # self.loss = -tf.reduce_mean(tf.reduce_mean(self.target*tf.log(self.y)+(1-self.target)*tf.log(1-self.y), 1))
+        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)))
         self.train_step = self.optimizer.minimize(self.loss)
 
         self.init_session()
