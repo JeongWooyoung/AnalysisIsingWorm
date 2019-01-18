@@ -41,9 +41,16 @@ if __name__ == '__main__':
     s2_train_data = train_data[:,:,1:2]
     s2_target_data = target_data[:,:,1:2]
     print("susceptibility")
-    eh.evaluations(args, s2_train_data, s2_target_data)
+    s2_result = eh.evaluations(args, s2_train_data, s2_target_data)
+    s2_result = np.array(s2_result)
+    print('=====================================================================================================================================================')
+    print('S2 Average: loss %03.9f rmse: %03.5f' % (i + 1, np.mean(s2_result[:,1]), np.mean(s2_result[:,0])))
+    print('=====================================================================================================================================================')
 
     s4_train_data = train_data[:,:,2:3]
     s4_target_data = target_data[:,:,2:3]
-    eh.evaluations(args, s4_train_data, s4_target_data)
     print("susceptibility4")
+    eh.evaluations(args, s4_train_data, s4_target_data)
+    print('=====================================================================================================================================================')
+    print('S4 Average: loss %03.9f rmse: %03.5f' % (i + 1, np.mean(s2_result[:,1]), np.mean(s2_result[:,0])))
+    print('=====================================================================================================================================================')

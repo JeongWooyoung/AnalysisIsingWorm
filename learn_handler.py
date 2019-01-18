@@ -40,19 +40,23 @@ class LSTM(object):
                                                                     , self.KeepProbCell: self.keep_prob_cell
                                                                     , self.KeepProbLayer: self.keep_prob_layer})
                 losses.append(np.mean(np.nan_to_num(loss)))
-            if i%10 == 9:
-                predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
-                accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
+            if i%100 == 99:
+                predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.target: test_target, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+                # accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
                 print('=====================================================================================================================================================')
-                print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), rmse, accuracy, precision, recall, f1))
+                # print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), rmse, accuracy, precision, recall, f1))
+                print('epoch %d: loss %03.9f rmse: %03.5f' % (i + 1, np.mean(losses), rmse))
                 print(datetime.now()-start)
                 print('=====================================================================================================================================================')
                 start = datetime.now()
         return np.mean(losses)
 
     def predict(self, data):
-        predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
-        return predicts, rmse
+        predicts = self.sess.run((self.prediction), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+        return predicts
+    def evaluation(self, data, target):
+        rmse = self.sess.run((self.rmse), feed_dict={self.input: data, self.target: target, self.KeepProbCell: 1,self.KeepProbLayer: 1})
+        return rmse
 
     def init_session(self):
         self.sess = tf.Session()
@@ -89,13 +93,13 @@ class LSTM(object):
     def generateModels(self, input_size, output_size, step_size):
         tf.reset_default_graph()
 
-        self.input = tf.placeholder(tf.float32, [None, step_size, input_size])
-        self.target = tf.placeholder(tf.float32, [None, output_size])
+        self.input = tf.placeholder(tf.float32, [None, step_size, input_size], name='input')
+        self.target = tf.placeholder(tf.float32, [None, step_size, output_size], name='target')
 
         self.keep_prob_cell = self.args.keep_prob_cell
         self.keep_prob_layer = self.args.keep_prob_layer
-        self.KeepProbCell = tf.placeholder(tf.float32, [])
-        self.KeepProbLayer = tf.placeholder(tf.float32, [])
+        self.KeepProbCell = tf.placeholder(tf.float32, [], name='KeepProbCell')
+        self.KeepProbLayer = tf.placeholder(tf.float32, [], name='KeepProbLayer')
 
         # Embedding
         w_init = tf.contrib.layers.xavier_initializer()
@@ -121,7 +125,7 @@ class LSTM(object):
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
         self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
-        # self.loss = -tf.reduce_mean(tf.reduce_mean(self.target*tf.log(self.y)+(1-self.target)*tf.log(1-self.y), 1))
+        # self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
         self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)), name='rmse')
         self.train_step = self.optimizer.minimize(self.loss, name='train_step')
 

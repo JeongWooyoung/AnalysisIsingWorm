@@ -34,13 +34,13 @@ def evaluations(args, data, targets):
 
         test_data, test_target = data[test_index], targets[test_index]
 
-        predicts, rmse = lstm.predict(test_data)
-        accuracy, precision, recall, f1 = evaluatePredictions(test_target, predicts)
+        rmse = lstm.evaluation(test_data, test_target)
         print('=====================================================================================================================================================')
-        print('fold %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i + 1, loss, rmse, accuracy, precision, recall, f1))
+        # print('fold %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i + 1, loss, rmse, accuracy, precision, recall, f1))
+        print('fold %d: loss %03.9f rmse: %03.5f' % (i + 1, loss, rmse))
         print(train_time)
         print('=====================================================================================================================================================')
-        results.append([rmse, accuracy, loss])
+        results.append([rmse, loss])
         fh.clearCaches()
 
     return results
