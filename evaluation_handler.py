@@ -40,7 +40,7 @@ def evaluations(args, data, targets):
         print('fold %d: loss %03.9f rmse: %03.5f' % (i + 1, loss, rmse))
         print(train_time)
         print('=====================================================================================================================================================')
-        results.append([rmse, loss])
+        results.append([loss, rmse])
         fh.clearCaches()
 
     return results
