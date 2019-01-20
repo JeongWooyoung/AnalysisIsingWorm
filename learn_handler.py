@@ -102,30 +102,34 @@ class LSTM(object):
         self.KeepProbLayer = tf.placeholder(tf.float32, [], name='KeepProbLayer')
 
         # Embedding
-        w_init = tf.contrib.layers.xavier_initializer()
-        w = tf.get_variable("wv", [step_size, input_size], initializer=w_init)
-        self.v = tf.multiply(w, self.input)
+        # w_init = tf.contrib.layers.xavier_initializer()
+        # w = tf.get_variable("wv", [step_size, input_size], initializer=w_init)
+        # self.v = tf.multiply(w, self.input)
 
         # generating alpha values
-        self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
+        # self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
+        #                                         , activation=tf.nn.softmax, n_layers=self.args.n_layers
+        #                                         , layer_size=self.args.n_hidden, reuse=False)
+        self.alpha = self.generateModel(name='layers', input=self.input, output_size=1
                                                 , activation=tf.nn.softmax, n_layers=self.args.n_layers
                                                 , layer_size=self.args.n_hidden, reuse=False)
 
         # generating c
         t = self.alpha
-        self.c = tf.reduce_sum(t, 2)
+        # self.c = tf.reduce_sum(t, 2)
+        self.prediction = tf.reduce_sum(t, 2)
 
         # generating y
-        w_init = tf.contrib.layers.xavier_initializer()
-        b_init = tf.constant_initializer(0.)
-        w = tf.get_variable("wy", [self.c.get_shape()[1], output_size], initializer=w_init)
-        b = tf.get_variable("by", [output_size], initializer=b_init)
+        # w_init = tf.contrib.layers.xavier_initializer()
+        # b_init = tf.constant_initializer(0.)
+        # w = tf.get_variable("wy", [self.c.get_shape()[1], output_size], initializer=w_init)
+        # b = tf.get_variable("by", [output_size], initializer=b_init)
 
-        self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b, name='predict')
+        # self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b, name='predict')
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
-        self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
-        # self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
+        # self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
+        self.loss = tf.reduce_mean(tf.square(self.prediction - self.target))
         self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)), name='rmse')
         self.train_step = self.optimizer.minimize(self.loss, name='train_step')
 
@@ -150,8 +154,8 @@ class LSTM(object):
         self.prediction = graph.get_tensor_by_name('predict:0')
         layer_name = 'layers'
         self.alpha = graph.get_tensor_by_name('LSTM_%s:%s:0'%(layer_name, layer_name))
-        self.emb = graph.get_tensor_by_name('wv:0')
-        self.wy = graph.get_tensor_by_name('wy:0')
+        # self.emb = graph.get_tensor_by_name('wv:0')
+        # self.wy = graph.get_tensor_by_name('wy:0')
 
         self.optimizer = graph.get_tensor_by_name("optimizer:0")
         self.loss = graph.get_tensor_by_name("loss:0")
