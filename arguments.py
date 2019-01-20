@@ -28,7 +28,7 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
 
     parser.add_argument('--n_hidden', type=int, default=200, help='Number of hidden units')
 
-    parser.add_argument('--learning_rate', type=float, default=1e-6, help='Learning rate for Adam optimizer')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate for Adam optimizer')
 
     parser.add_argument('--num_epochs', type=int, default=100, help='The number of epochs to run')
 
