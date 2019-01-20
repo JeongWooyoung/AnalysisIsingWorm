@@ -2,6 +2,21 @@
 import csv, os, shutil
 import numpy as np
 
+headFile = 'head'
+tailFile = 'tail'
+def getData(file_cnt):
+    head_data = []
+    tail_data = []
+    for i in range(file_cnt):
+        head_data += loadTxT(headFile+'%d'%(i+1)).tolist()
+        tail_data += loadTxT(tailFile+'%d'%(i+1)).tolist()
+    head_data = np.array(head_data, dtype=np.float_)
+    tail_data = np.array(tail_data, dtype=np.float_)
+    head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
+    tail_data = tail_data.reshape(tail_data.shape[0], 1, tail_data.shape[1])
+    return head_data[:,:,1:2], tail_data[:,:,1:2], head_data[:,:,2:3], tail_data[:,:,2:3]
+
+
 #########################################################################################################
 ######################################### TXT ###########################################################
 
@@ -9,7 +24,7 @@ def saveTxT(data, file_name):
     if ".txt" not in file_name: file_name = file_name+".txt"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+file_name.replace('\\','/').replace(":", "")
     directory = path[:path.rfind('/')]
     if not os.path.isdir(directory):
         makeDirectories(directory)
@@ -21,7 +36,7 @@ def loadTxT(file_name, column_rows=0):
     if ".txt" not in file_name: file_name = file_name+".txt"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+file_name.replace('\\','/').replace(":", "")
     if not os.path.isfile(path) :
         return None
 
@@ -35,7 +50,7 @@ def saveCSV(data, file_name, column_sec=[]):
     if ".csv" not in file_name: file_name = file_name+".csv"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+file_name.replace('\\','/').replace(":", "")
     directory = path[:path.rfind('/')]
     if not os.path.isdir(directory):
         makeDirectories(directory)
@@ -55,7 +70,7 @@ def loadCSV(file_name, column_rows=0):
     if ".csv" not in file_name: file_name = file_name+".csv"
 
     if ":\\" in file_name or ":/" in file_name : path = file_name.replace('\\','/')
-    else : path = getStoragePath()+"/"+file_name.replace('\\','/').replace(":", "")
+    else : path = getStoragePath()+file_name.replace('\\','/').replace(":", "")
     if not os.path.isfile(path) :
         return None
     csv_file = open(path, "r")

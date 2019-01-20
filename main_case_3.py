@@ -12,8 +12,8 @@ if __name__ == '__main__':
     s2_train_data, s2_target_data, s4_train_data, s4_target_data = fh.getData(1)
 
     print("susceptibility")
-    s_result = eh.evaluations(args, s2_train_data, s2_target_data)
+    s_result = eh.evaluations(args, s2_train_data, s4_target_data)
     s_result = np.array(s_result)
     print('=====================================================================================================================================================')
-    print('Case1 Average: loss %03.9f rmse: %03.5f' % (np.mean(s_result[:,1]), np.mean(s_result[:,0])))
+    print('Case3 Average: loss %03.9f rmse: %03.5f' % (np.mean(s_result[:,1]), np.mean(s_result[:,0])))
     print('=====================================================================================================================================================')
