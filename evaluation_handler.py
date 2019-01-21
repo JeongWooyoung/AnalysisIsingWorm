@@ -33,8 +33,8 @@ def evaluations(args, data, targets):
 
         rmse = lstm.evaluation(test_data, test_target)
         results.append([loss, rmse])
-        predicts = lstm.predict(test_data)
-        fh.saveTxT(predicts, 'fold/%d'%(i+1))
+        predicts = np.array(lstm.predict(test_data))
+        fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'fold/%d'%(i+1))
 
     return results
 

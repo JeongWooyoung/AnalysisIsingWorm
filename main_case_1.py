@@ -9,7 +9,7 @@ trainFile = 'head'
 targetFile = 'tail'
 if __name__ == '__main__':
     args = arguments.parse_args()
-    s2_train_data, s2_target_data, s4_train_data, s4_target_data = fh.getData(1)
+    s2_train_data, s2_target_data, s4_train_data, s4_target_data = fh.getData(2)
 
     print("Case 1")
     s_result = eh.evaluations(args, s2_train_data, s2_target_data)

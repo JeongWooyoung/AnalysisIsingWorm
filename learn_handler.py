@@ -40,7 +40,7 @@ class LSTM(object):
                                                                     , self.KeepProbCell: self.keep_prob_cell
                                                                     , self.KeepProbLayer: self.keep_prob_layer})
                 losses.append(np.mean(np.nan_to_num(loss)))
-            if i%10 == 9:
+            if i%100 == 99:
                 predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.target: test_target, self.KeepProbCell: 1, self.KeepProbLayer: 1})
                 # accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
                 print('=====================================================================================================================================================')
@@ -64,30 +64,30 @@ class LSTM(object):
         tf.local_variables_initializer().run(session=self.sess)
 
     def generateModel(self, name, input, output_size, activation, n_layers, layer_size, reuse):
-        def rnn_cell(): return tf.contrib.rnn.BasicRNNCell(layer_size, reuse=reuse)
-        with tf.variable_scope('LSTM_'+name, reuse=reuse):
-            Cell = tf.contrib.rnn.MultiRNNCell(
-                [tf.contrib.rnn.DropoutWrapper(rnn_cell(), input_keep_prob=self.KeepProbCell) for _ in range(n_layers)]
-                , state_is_tuple=True)
-            Cell = tf.contrib.rnn.DropoutWrapper(Cell, input_keep_prob=self.KeepProbLayer)
+        def rnn_cell(): return tf.contrib.rnn.BasicLSTMCell(layer_size, reuse=reuse)
+        # with tf.variable_scope('LSTM_'+name, reuse=reuse):
+        Cell = tf.contrib.rnn.MultiRNNCell(
+            [tf.contrib.rnn.DropoutWrapper(rnn_cell(), input_keep_prob=self.KeepProbCell) for _ in range(n_layers)]
+            , state_is_tuple=True)
+        Cell = tf.contrib.rnn.DropoutWrapper(Cell, input_keep_prob=self.KeepProbLayer)
 
-            # Create RNN
-            # 'outputs' is a tensor of shape [batch_size, max_time, 256]
-            # 'state' is a N-tuple where N is the number of RNNCells containing a
-            reverse_input = tf.reverse(input, axis=[1], name='reverse_input')
-            Output, State = tf.nn.dynamic_rnn(Cell, reverse_input, dtype=tf.float32)
-            h = tf.reverse(Output, axis=[1])
+        # Create RNN
+        # 'outputs' is a tensor of shape [batch_size, max_time, 256]
+        # 'state' is a N-tuple where N is the number of RNNCells containing a
+        reverse_input = tf.reverse(input, axis=[1], name='reverse_input')
+        Output, State = tf.nn.dynamic_rnn(Cell, reverse_input, dtype=tf.float32)
+        h = tf.reverse(Output, axis=[1])
 
-            w_init = tf.contrib.layers.xavier_initializer()
-            b_init = tf.constant_initializer(0.)
-            w = tf.get_variable("w", [h.get_shape()[2], output_size], initializer=w_init)
-            b = tf.get_variable("b", [output_size], initializer=b_init)
+        w_init = tf.contrib.layers.xavier_initializer()
+        b_init = tf.constant_initializer(0.)
+        w = tf.get_variable("w", [h.get_shape()[2], output_size], initializer=w_init)
+        b = tf.get_variable("b", [output_size], initializer=b_init)
 
-            h = tf.transpose(h, (1, 0, 2))
+        h = tf.transpose(h, (1, 0, 2))
 
-            e = []
-            for i in range(h.get_shape()[0]) :
-                e.append(activation(tf.matmul(h[i], w) + b)*0.5)
+        e = []
+        for i in range(h.get_shape()[0]) :
+            e.append(activation(tf.matmul(h[i], w) + b)*0.5)
         return tf.transpose(e, (1, 0, 2), name=name)
 
     def generateModels(self, input_size, output_size, step_size):
@@ -101,36 +101,17 @@ class LSTM(object):
         self.KeepProbCell = tf.placeholder(tf.float32, [], name='KeepProbCell')
         self.KeepProbLayer = tf.placeholder(tf.float32, [], name='KeepProbLayer')
 
-        # Embedding
-        # w_init = tf.contrib.layers.xavier_initializer()
-        # w = tf.get_variable("wv", [step_size, input_size], initializer=w_init)
-        # self.v = tf.multiply(w, self.input)
-
         # generating alpha values
-        # self.alpha = self.generateModel(name='layers', input=self.v, output_size=1
-        #                                         , activation=tf.nn.softmax, n_layers=self.args.n_layers
-        #                                         , layer_size=self.args.n_hidden, reuse=False)
         self.alpha = self.generateModel(name='layers', input=self.input, output_size=1
-                                                , activation=tf.nn.softmax, n_layers=self.args.n_layers
+                                                , activation=tf.nn.relu, n_layers=self.args.n_layers
                                                 , layer_size=self.args.n_hidden, reuse=False)
 
-        # generating c
-        t = self.alpha
-        # self.c = tf.reduce_sum(t, 2)
-        self.prediction = tf.reduce_sum(t, 2)
-
-        # generating y
-        # w_init = tf.contrib.layers.xavier_initializer()
-        # b_init = tf.constant_initializer(0.)
-        # w = tf.get_variable("wy", [self.c.get_shape()[1], output_size], initializer=w_init)
-        # b = tf.get_variable("by", [output_size], initializer=b_init)
-
-        # self.prediction = tf.nn.softmax(tf.matmul(self.c, w)+b, name='predict')
+        self.prediction = self.alpha[:,:,-1]
+        target = self.target[:,:,-1]
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
-        # self.loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.target, logits=self.prediction, name='loss')
-        self.loss = tf.reduce_mean(tf.square(self.prediction - self.target))
-        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(self.target - self.prediction)), name='rmse')
+        self.loss = tf.reduce_mean(tf.square(target - self.prediction))
+        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(target - self.prediction)), name='rmse')
         self.train_step = self.optimizer.minimize(self.loss, name='train_step')
 
         self.init_session()

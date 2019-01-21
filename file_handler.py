@@ -14,8 +14,22 @@ def getData(file_cnt):
     tail_data = np.array(tail_data, dtype=np.float_)
     head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
     tail_data = tail_data.reshape(tail_data.shape[0], 1, tail_data.shape[1])
-    return head_data[:,:,1:2], tail_data[:,:,1:2], head_data[:,:,2:3], tail_data[:,:,2:3]
+    s2_train_data, s2_target_data, s4_train_data, s4_target_data = head_data[:,:,1:2], tail_data[:,:,1:2], head_data[:,:,2:3], tail_data[:,:,2:3]
 
+    displayData(s2_train_data, 'S2 Train Data')
+    displayData(s2_target_data, 'S2 Target Data')
+    displayData(s4_train_data, 'S4 Train Data')
+    displayData(s4_target_data, 'S4 Target Data')
+
+    return s2_train_data, s2_target_data, s4_train_data, s4_target_data
+def displayData(data, name='Data'):
+    mean = np.mean(data)
+    std = np.std(data)
+    max = np.max(data)
+    min = np.min(data)
+    percentile = np.percentile(data, [25, 50, 75])
+    print('%s. Avg: %3.5f Std: %3.5f Max: %3.5f Min: %3.5f Percentile(25, 50, 75): %3.5f %3.5f %3.5f'%
+          (name, mean, std, max, min, percentile[0], percentile[1], percentile[2]))
 
 #########################################################################################################
 ######################################### TXT ###########################################################
