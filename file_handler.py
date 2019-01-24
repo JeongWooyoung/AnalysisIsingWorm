@@ -5,11 +5,12 @@ import numpy as np
 headFile = 'head'
 tailFile = 'tail'
 def getData(file_cnt):
+    path = getStoragePath()+'/data/IsingThermal/training_set/N64_T2.300_H0.000/'
     head_data = []
     tail_data = []
     for i in range(file_cnt):
-        head_data += loadTxT(headFile+'%d'%(i+1)).tolist()
-        tail_data += loadTxT(tailFile+'%d'%(i+1)).tolist()
+        head_data += loadTxT(path+headFile+'%d'%(i+1)).tolist()
+        tail_data += loadTxT(path+tailFile+'%d'%(i+1)).tolist()
     head_data = np.array(head_data, dtype=np.float_)
     tail_data = np.array(tail_data, dtype=np.float_)
     head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
@@ -22,6 +23,23 @@ def getData(file_cnt):
     displayData(s4_target_data, 'S4 Target Data')
 
     return s2_train_data, s2_target_data, s4_train_data, s4_target_data
+def getWormData(file_cnt):
+    path = getStoragePath()+'/data/IsingWorm/training_set/N8_T1.000/'
+    head_data = []
+    tail_data = []
+    for i in range(file_cnt):
+        head_data += loadTxT(path+headFile+'%d'%(i+1)).tolist()
+        tail_data += loadTxT(path+tailFile+'%d'%(i+1)).tolist()
+    head_data = np.array(head_data, dtype=np.float_)
+    tail_data = np.array(tail_data, dtype=np.float_)
+    head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
+    tail_data = tail_data.reshape(tail_data.shape[0], 1, tail_data.shape[1])
+    s2_train_data, s4_target_data = head_data[:,:,1:2], tail_data[:,:,1:2]
+
+    displayData(s2_train_data, 'S2 Train Data')
+    displayData(s4_target_data, 'S4 Target Data')
+
+    return s2_train_data, s4_target_data
 def displayData(data, name='Data'):
     mean = np.mean(data)
     std = np.std(data)
@@ -109,7 +127,7 @@ def makeDirectories(directory):
     if not os.path.isdir(directory):
         os.makedirs(directory)
 def getStoragePath():
-    StoragePath = os.getcwd().replace('\\', '/')+'/training_set/N64_T2.300_H0.000/'
+    StoragePath = os.getcwd().replace('\\', '/')
     return StoragePath
 
 def clearCaches():

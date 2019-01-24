@@ -19,7 +19,7 @@ def evaluations(args, data, targets):
     if not type(data).__module__==np.__name__: data = np.array(data)
     if not type(targets).__module__==np.__name__: targets = np.array(targets)
 
-    kf = KFold(n_splits=10, shuffle=True, random_state=0)
+    kf = KFold(n_splits=10, shuffle=False, random_state=0)
     shape = data.shape
     results = []
     for i, (train_index, test_index) in enumerate(kf.split(data)):
@@ -34,7 +34,7 @@ def evaluations(args, data, targets):
         rmse = lstm.evaluation(test_data, test_target)
         results.append([loss, rmse])
         predicts = np.array(lstm.predict(test_data))
-        fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'fold/%d'%(i+1))
+        fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'result/fold/%d'%(i+1))
 
     return results
 

@@ -103,7 +103,7 @@ class LSTM(object):
 
         # generating alpha values
         self.alpha = self.generateModel(name='layers', input=self.input, output_size=1
-                                                , activation=tf.nn.relu, n_layers=self.args.n_layers
+                                                , activation=tf.nn.elu, n_layers=self.args.n_layers
                                                 , layer_size=self.args.n_hidden, reuse=False)
 
         self.prediction = self.alpha[:,:,-1]
