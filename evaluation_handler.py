@@ -38,6 +38,23 @@ def evaluations(args, data, targets):
 
     return results
 
+def evaluations2(args, train_input, train_targets, test_input, test_targets, eval_file_name='evaluations_result'):
+    if not type(train_input).__module__==np.__name__: train_input = np.array(train_input)
+    if not type(train_targets).__module__==np.__name__: train_targets = np.array(train_targets)
+    if not type(test_input).__module__==np.__name__: test_input = np.array(test_input)
+    if not type(test_targets).__module__==np.__name__: test_targets = np.array(test_targets)
+
+    results = []
+    lstm = lh.LSTM(args)
+    lstm.generateModels(train_input.shape[1], train_targets.shape[1], train_input.shape[2])
+    loss = lstm.train(data=train_input, target=train_targets)
+
+    rmse = lstm.evaluation(test_input, test_targets)
+    results.append([loss, rmse])
+    predicts = np.array(lstm.predict(test_input))
+    fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'result/%s'%(eval_file_name))
+
+    return results
 def evaluatePredictions(test_labels, predicts):
     # average = 'binary'
     average = 'weighted'

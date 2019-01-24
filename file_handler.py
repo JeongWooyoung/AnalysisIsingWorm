@@ -4,42 +4,33 @@ import numpy as np
 
 headFile = 'head'
 tailFile = 'tail'
-def getData(file_cnt):
-    path = getStoragePath()+'/data/IsingThermal/training_set/N64_T2.300_H0.000/'
-    head_data = []
-    tail_data = []
-    for i in range(file_cnt):
-        head_data += loadTxT(path+headFile+'%d'%(i+1)).tolist()
-        tail_data += loadTxT(path+tailFile+'%d'%(i+1)).tolist()
-    head_data = np.array(head_data, dtype=np.float_)
-    tail_data = np.array(tail_data, dtype=np.float_)
-    head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
-    tail_data = tail_data.reshape(tail_data.shape[0], 1, tail_data.shape[1])
-    s2_train_data, s2_target_data, s4_train_data, s4_target_data = head_data[:,:,1:2], tail_data[:,:,1:2], head_data[:,:,2:3], tail_data[:,:,2:3]
-
-    displayData(s2_train_data, 'S2 Train Data')
-    displayData(s2_target_data, 'S2 Target Data')
-    displayData(s4_train_data, 'S4 Train Data')
-    displayData(s4_target_data, 'S4 Target Data')
-
-    return s2_train_data, s2_target_data, s4_train_data, s4_target_data
 def getWormData(file_cnt):
-    path = getStoragePath()+'/data/IsingWorm/training_set/N8_T1.000/'
-    head_data = []
-    tail_data = []
+    path = getStoragePath()+'data/IsingWorm/training_set/N8_T1.000/'
+    s2_train_input = getPathData(path+headFile, file_cnt)
+    s4_train_target = getPathData(path+tailFile, file_cnt)
+
+    path = getStoragePath()+'data/IsingWorm/evaluation_input/N8_T1.000/'
+    s2_test_input = getPathData(path+headFile, file_cnt)
+    path = getStoragePath()+'data/IsingWorm/compare_with_prediction/N8_T1.000/'
+    s4_test_target = getPathData(path+tailFile, file_cnt)
+
+    displayData(s2_train_input, 'S2 Train Input')
+    displayData(s4_train_target, 'S4 Train Target')
+    displayData(s2_test_input, 'S2 Test Input')
+    displayData(s4_test_target, 'S4 Test Target')
+
+    return s2_train_input, s4_train_target, s2_test_input, s4_test_target
+def getPathData(path, file_cnt=1):
+    data = []
     for i in range(file_cnt):
-        head_data += loadTxT(path+headFile+'%d'%(i+1)).tolist()
-        tail_data += loadTxT(path+tailFile+'%d'%(i+1)).tolist()
-    head_data = np.array(head_data, dtype=np.float_)
-    tail_data = np.array(tail_data, dtype=np.float_)
-    head_data = head_data.reshape(head_data.shape[0], 1, head_data.shape[1])
-    tail_data = tail_data.reshape(tail_data.shape[0], 1, tail_data.shape[1])
-    s2_train_data, s4_target_data = head_data[:,:,1:2], tail_data[:,:,1:2]
+        tmp = loadTxT(path+'%d'%(i))
+        if not tmp is None:
+            data += tmp.tolist()
+    if len(data) < 1: return None
+    data = np.array(data, dtype=np.float_)
+    data = data.reshape(data.shape[0], 1, data.shape[1])
+    return data[:,:,1:2]
 
-    displayData(s2_train_data, 'S2 Train Data')
-    displayData(s4_target_data, 'S4 Target Data')
-
-    return s2_train_data, s4_target_data
 def displayData(data, name='Data'):
     mean = np.mean(data)
     std = np.std(data)
@@ -127,7 +118,7 @@ def makeDirectories(directory):
     if not os.path.isdir(directory):
         os.makedirs(directory)
 def getStoragePath():
-    StoragePath = os.getcwd().replace('\\', '/')
+    StoragePath = os.getcwd().replace('\\', '/')+'/'
     return StoragePath
 
 def clearCaches():
