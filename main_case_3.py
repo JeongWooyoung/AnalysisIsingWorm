@@ -8,7 +8,7 @@ import evaluation_handler as eh
 trainFile = 'head'
 targetFile = 'tail'
 if __name__ == '__main__':
-    file_cnt=1
+    file_cnt=2
     args = arguments.parse_args()
     s2_train_input, s4_train_target, s2_test_input, s4_test_target = fh.getWormData(file_cnt)
 

@@ -22,8 +22,8 @@ class LSTM(object):
         train_data = data[sh]
         target = target[sh]
 
-        test_data = train_data[:100]
-        test_target = target[:100]
+        test_data = train_data[:1000]
+        test_target = target[:1000]
 
         start = datetime.now()
         for i in range(self.args.num_epochs):
