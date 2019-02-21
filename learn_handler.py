@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from datetime import datetime
 
-import evaluation_handler as eh
+import file_handler as fh
 
 #########################################################################################################
 ################################### Retain RNN ##########################################################
@@ -48,11 +48,12 @@ class LSTM(object):
                 print('epoch %d: loss %03.9f rmse: %03.5f' % (i + 1, np.mean(losses), rmse))
                 print(datetime.now()-start)
                 print('=====================================================================================================================================================')
+                fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'predicts/epoch_%d' % (i + 1))
                 start = datetime.now()
         return np.mean(losses)
 
     def predict(self, data):
-        predicts = self.sess.run((self.prediction), feed_dict={self.input: data, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+        predicts = self.sess.run((self.prediction), feed_dict={self.input: data, self.KeepProbCell: self.args.keep_prob_cell, self.KeepProbLayer: self.args.keep_prob_layer})
         return predicts
     def evaluation(self, data, target):
         rmse = self.sess.run((self.rmse), feed_dict={self.input: data, self.target: target, self.KeepProbCell: 1,self.KeepProbLayer: 1})
@@ -106,12 +107,19 @@ class LSTM(object):
                                                 , activation=tf.nn.elu, n_layers=self.args.n_layers
                                                 , layer_size=self.args.n_hidden, reuse=False)
 
-        self.prediction = self.alpha[:,:,-1]
+        self.prediction = self.alpha
         target = self.target[:,:,-1]
+        predict = self.prediction[:,:,-1]
+        # target_shape = tf.shape(self.target)
+        # predict_shape = tf.shape(self.prediction)
+        # target = tf.reshape(self.target, [target_shape[0], target_shape[1]*target_shape[2]])
+        # predict = tf.reshape(self.prediction, [predict_shape[0], predict_shape[1]*predict_shape[2]])
 
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
-        self.loss = tf.reduce_mean(tf.square(target - self.prediction))
-        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(target - self.prediction)), name='rmse')
+        # self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
+        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
+        self.loss = tf.losses.mean_squared_error(target, predict)
+        # self.loss = tf.reduce_mean(tf.square(target - predict))
+        self.rmse = tf.sqrt(tf.reduce_mean(tf.square(target - predict)), name='rmse')
         self.train_step = self.optimizer.minimize(self.loss, name='train_step')
 
         self.init_session()

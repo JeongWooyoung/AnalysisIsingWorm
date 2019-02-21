@@ -1,6 +1,0 @@
-model_checkpoint_path: "lstm.ckpt-1560"
-all_model_checkpoint_paths: "lstm.ckpt-1248"
-all_model_checkpoint_paths: "lstm.ckpt-1326"
-all_model_checkpoint_paths: "lstm.ckpt-1404"
-all_model_checkpoint_paths: "lstm.ckpt-1482"
-all_model_checkpoint_paths: "lstm.ckpt-1560"

@@ -24,15 +24,15 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
     parser.add_argument('--keep_prob_cell', type=float, default=.9, help='rate dropout cell')
     parser.add_argument('--keep_prob_layer', type=float, default=.9, help='rate dropout layer')
 
-    parser.add_argument('--n_layers', type=int, default=3, help='Number of hidden layers')
+    parser.add_argument('--n_layers', type=int, default=1, help='Number of hidden layers')
 
-    parser.add_argument('--n_hidden', type=int, default=200, help='Number of hidden units')
+    parser.add_argument('--n_hidden', type=int, default=1, help='Number of hidden units')
 
-    parser.add_argument('--learning_rate', type=float, default=1e-5, help='Learning rate for Adam optimizer')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate for Adam optimizer')
 
     parser.add_argument('--num_epochs', type=int, default=1000, help='The number of epochs to run')
 
-    parser.add_argument('--batch_size', type=int, default=50, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=100, help='Batch size')
     parser.add_argument('--output_size', type=int, default=1, help='Output size')
 
     args = parser.parse_args()
@@ -49,9 +49,9 @@ def check_args(args):
     except(FileExistsError):
         pass
     # delete all existing files
-    files = glob.glob(args.results_path+'/*')
-    for f in files:
-        os.remove(f)
+    # files = glob.glob(args.results_path+'/*')
+    # for f in files:
+    #     os.remove(f)
 
     # --n_hidden
     try:

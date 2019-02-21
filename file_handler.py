@@ -4,15 +4,16 @@ import numpy as np
 
 headFile = 'head'
 tailFile = 'tail'
-def getWormData(file_cnt):
-    path = getStoragePath()+'data/IsingWorm/training_set/N8_T1.000/'
-    s2_train_input = getPathData(path+headFile, file_cnt)
-    s4_train_target = getPathData(path+tailFile, file_cnt)
+def getWormData(file_cnt=1, temperature=['1.000']):
+    train_path = getStoragePath()+'data/IsingWorm/training_set/'
+    test_input_path = getStoragePath()+'data/IsingWorm/evaluation_input/'
+    test_target_path = getStoragePath()+'data/IsingWorm/compare_with_prediction/'
 
-    path = getStoragePath()+'data/IsingWorm/evaluation_input/N8_T1.000/'
-    s2_test_input = getPathData(path+headFile, file_cnt)
-    path = getStoragePath()+'data/IsingWorm/compare_with_prediction/N8_T1.000/'
-    s4_test_target = getPathData(path+tailFile, file_cnt)
+    s2_train_input = getPathData(train_path, headFile, file_cnt, temperature)
+    s4_train_target = getPathData(train_path, tailFile, file_cnt, temperature)
+
+    s2_test_input = getPathData(test_input_path, headFile, file_cnt, temperature)
+    s4_test_target = getPathData(test_target_path, tailFile, file_cnt, temperature)
 
     displayData(s2_train_input, 'S2 Train Input')
     displayData(s4_train_target, 'S4 Train Target')
@@ -20,12 +21,13 @@ def getWormData(file_cnt):
     displayData(s4_test_target, 'S4 Test Target')
 
     return s2_train_input, s4_train_target, s2_test_input, s4_test_target
-def getPathData(path, file_cnt=1):
+def getPathData(path, file_name, file_cnt=1, temperature=['1.000']):
     data = []
-    for i in range(file_cnt):
-        tmp = loadTxT(path+'%d'%(i))
-        if not tmp is None:
-            data += tmp.tolist()
+    for t in temperature:
+        for i in range(file_cnt):
+            tmp = loadTxT(path+'N8_T%s/%s%d'%(t, file_name, i))
+            if not tmp is None:
+                data += tmp.tolist()
     if len(data) < 1: return None
     data = np.array(data, dtype=np.float_)
     data = data.reshape(data.shape[0], 1, data.shape[1])
@@ -37,8 +39,8 @@ def displayData(data, name='Data'):
     max = np.max(data)
     min = np.min(data)
     percentile = np.percentile(data, [25, 50, 75])
-    print('%s. Avg: %3.5f Std: %3.5f Max: %3.5f Min: %3.5f Percentile(25, 50, 75): %3.5f %3.5f %3.5f'%
-          (name, mean, std, max, min, percentile[0], percentile[1], percentile[2]))
+    print('%s. Avg: %3.5f Std: %3.5f Max: %3.5f Min: %3.5f Percentile(25, 50, 75): %3.5f %3.5f %3.5f Count: %6d'%
+          (name, mean, std, max, min, percentile[0], percentile[1], percentile[2], data.shape[0]))
 
 #########################################################################################################
 ######################################### TXT ###########################################################
