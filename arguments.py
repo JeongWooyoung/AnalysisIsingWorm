@@ -24,9 +24,9 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
     parser.add_argument('--keep_prob_cell', type=float, default=.9, help='rate dropout cell')
     parser.add_argument('--keep_prob_layer', type=float, default=.9, help='rate dropout layer')
 
-    parser.add_argument('--n_layers', type=int, default=1, help='Number of hidden layers')
+    parser.add_argument('--n_layers', type=int, default=5, help='Number of hidden layers')
 
-    parser.add_argument('--n_hidden', type=int, default=1, help='Number of hidden units')
+    parser.add_argument('--n_hidden', type=int, default=30, help='Number of hidden units')
 
     parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate for Adam optimizer')
 

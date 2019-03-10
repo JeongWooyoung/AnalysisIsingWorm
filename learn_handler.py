@@ -88,7 +88,7 @@ class LSTM(object):
 
         e = []
         for i in range(h.get_shape()[0]) :
-            e.append(activation(tf.matmul(h[i], w) + b)*0.5)
+            e.append(activation(tf.matmul(h[i], w) + b))
         return tf.transpose(e, (1, 0, 2), name=name)
 
     def generateModels(self, input_size, output_size, step_size):
@@ -108,16 +108,17 @@ class LSTM(object):
                                                 , layer_size=self.args.n_hidden, reuse=False)
 
         self.prediction = self.alpha
-        target = self.target[:,:,-1]
-        predict = self.prediction[:,:,-1]
-        # target_shape = tf.shape(self.target)
-        # predict_shape = tf.shape(self.prediction)
-        # target = tf.reshape(self.target, [target_shape[0], target_shape[1]*target_shape[2]])
-        # predict = tf.reshape(self.prediction, [predict_shape[0], predict_shape[1]*predict_shape[2]])
+        # target = self.target[:,:,-1]
+        # predict = self.prediction[:,:,-1]
+        target_shape = tf.shape(self.target)
+        predict_shape = tf.shape(self.prediction)
+        target = tf.reshape(self.target, [target_shape[0], target_shape[1]*target_shape[2]])
+        predict = tf.reshape(self.prediction, [predict_shape[0], predict_shape[1]*predict_shape[2]])
 
-        # self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
-        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
+        # self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.args.learning_rate, name='optimizer')
         self.loss = tf.losses.mean_squared_error(target, predict)
+        # self.loss = -tf.reduce_mean(target*tf.log(predict)+(1-target)*tf.log(1-predict))
         # self.loss = tf.reduce_mean(tf.square(target - predict))
         self.rmse = tf.sqrt(tf.reduce_mean(tf.square(target - predict)), name='rmse')
         self.train_step = self.optimizer.minimize(self.loss, name='train_step')

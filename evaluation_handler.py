@@ -61,7 +61,7 @@ def evaluations2(args, train_input, train_targets, test_input, test_targets, eva
     fh.displayData(test_predicts, 'Test Predicts')
 
     # showScatter([train_input, test_input, test_input], [train_targets, test_targets, predicts])
-    saveScatter([train_input, test_input, test_input, train_input], [train_targets, test_targets, predicts, train_input], args=args)
+    saveScatter([train_input, test_input, test_input, train_input], [train_targets, test_targets, test_predicts, train_predicts], args=args)
     # showScatter(test_input, test_targets, predicts)
 
     return results
