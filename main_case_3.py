@@ -9,13 +9,13 @@ import evaluation_handler as eh
 trainFile = 'head'
 targetFile = 'tail'
 if __name__ == '__main__':
-    file_cnt=4
     start = datetime.now()
     # temperature = ['1.000', '1.500', '2.000', '2.500', '3.000', '3.500', '4.000', '4.500', '5.000']
     temperature = ['2.500']
     print('=====================================================================================================================================================')
     args = arguments.parse_args()
-    s2_train_input, s4_train_target, s2_test_input, s4_test_target = fh.getWormData(file_cnt, temperature)
+    args.file_cnt=1
+    train_input, train_target, test_input, test_target = fh.getWormData(file_cnt, temperature)
     print('=====================================================================================================================================================')
 
     layers = 5
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
             print("======================================================= Case 3. %02d layers, %02d hidden nodes =========================================================="
                   %(args.n_layers, args.n_hidden))
-            s_result = eh.evaluations2(args, s2_train_input, s4_train_target, s2_test_input, s4_test_target)
+            s_result = eh.evaluations2(args, train_input, train_target, test_input, test_target)
             s_result = np.array(s_result)
             print('=====================================================================================================================================================')
             for i, (loss, rmse) in enumerate(s_result):

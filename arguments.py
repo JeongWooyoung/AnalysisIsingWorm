@@ -20,6 +20,7 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
                         help='ML train model name\n')
     parser.add_argument('--model_path', type=str, default=results_path+'/models', help='File path of output images')
     parser.add_argument('--results_path', type=str, default=results_path, help='File path of output images')
+    parser.add_argument('--file_cnt', type=int, default=4, help='Number of data files')
 
     parser.add_argument('--keep_prob_cell', type=float, default=.9, help='rate dropout cell')
     parser.add_argument('--keep_prob_layer', type=float, default=.9, help='rate dropout layer')

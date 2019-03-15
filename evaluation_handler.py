@@ -54,10 +54,10 @@ def evaluations2(args, train_input, train_targets, test_input, test_targets, eva
     rmse = lstm.evaluation(test_input, test_targets)
     results.append([loss, rmse])
     train_predicts = np.array(lstm.predict(train_input))
-    fh.saveTxT(train_predicts.reshape(train_predicts.shape[0], 1), 'results/train_predicts_%s_%d_%d'%(eval_file_name, args.n_layers, args.n_hidden))
+    fh.saveTxT(train_predicts.reshape(train_predicts.shape[0], 1), 'results/train_predicts_%s_%d_%d_%d'%(eval_file_name, args.n_layers, args.n_hidden, args.file_cnt))
     fh.displayData(train_predicts, 'Train Predicts')
     test_predicts = np.array(lstm.predict(test_input))
-    fh.saveTxT(test_predicts.reshape(test_predicts.shape[0], 1), 'results/test_predicts_%s_%d_%d'%(eval_file_name, args.n_layers, args.n_hidden))
+    fh.saveTxT(test_predicts.reshape(test_predicts.shape[0], 1), 'results/test_predicts_%s_%d_%d_%d'%(eval_file_name, args.n_layers, args.n_hidden, args.file_cnt))
     fh.displayData(test_predicts, 'Test Predicts')
 
     # showScatter([train_input, test_input, test_input], [train_targets, test_targets, predicts])

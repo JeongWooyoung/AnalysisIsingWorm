@@ -9,18 +9,18 @@ def getWormData(file_cnt=1, temperature=['1.000']):
     test_input_path = getStoragePath()+'data/IsingWorm/evaluation_input/'
     test_target_path = getStoragePath()+'data/IsingWorm/compare_with_prediction/'
 
-    s2_train_input = getPathData(train_path, headFile, file_cnt, temperature)
-    s4_train_target = getPathData(train_path, tailFile, file_cnt, temperature)
+    train_input = getPathData(train_path, headFile, file_cnt, temperature)
+    train_target = getPathData(train_path, tailFile, file_cnt, temperature)
 
-    s2_test_input = getPathData(test_input_path, headFile, file_cnt, temperature)
-    s4_test_target = getPathData(test_target_path, tailFile, file_cnt, temperature)
+    test_input = getPathData(test_input_path, headFile, file_cnt, temperature)
+    test_target = getPathData(test_target_path, tailFile, file_cnt, temperature)
 
-    displayData(s2_train_input, 'S2 Train Input')
-    displayData(s4_train_target, 'S4 Train Target')
-    displayData(s2_test_input, 'S2 Test Input')
-    displayData(s4_test_target, 'S4 Test Target')
+    displayData(train_input, 'Train Input')
+    displayData(train_target, 'Train Target')
+    displayData(test_input, 'Test Input')
+    displayData(test_target, 'Test Target')
 
-    return s2_train_input, s4_train_target, s2_test_input, s4_test_target
+    return train_input, train_target, test_input, test_target
 def getPathData(path, file_name, file_cnt=1, temperature=['1.000']):
     data = []
     for t in temperature:
