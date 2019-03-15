@@ -15,7 +15,7 @@ if __name__ == '__main__':
     print('=====================================================================================================================================================')
     args = arguments.parse_args()
     args.file_cnt=1
-    train_input, train_target, test_input, test_target = fh.getWormData(file_cnt, temperature)
+    train_input, train_target, test_input, test_target = fh.getWormData(args.file_cnt, temperature)
     print('=====================================================================================================================================================')
 
     layers = 5

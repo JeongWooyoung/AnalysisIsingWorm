@@ -25,6 +25,8 @@ class LSTM(object):
         test_data = train_data[:1000]
         test_target = target[:1000]
 
+        check_time = int(self.args.num_epochs/10)
+        con_check_time = check_time-1
         start = datetime.now()
         for i in range(self.args.num_epochs):
             losses = []
@@ -40,7 +42,7 @@ class LSTM(object):
                                                                     , self.KeepProbCell: self.keep_prob_cell
                                                                     , self.KeepProbLayer: self.keep_prob_layer})
                 losses.append(np.mean(np.nan_to_num(loss)))
-            if i%100 == 99:
+            if i%check_time == con_check_time:
                 predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.target: test_target, self.KeepProbCell: 1, self.KeepProbLayer: 1})
                 # accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
                 print('=====================================================================================================================================================')
