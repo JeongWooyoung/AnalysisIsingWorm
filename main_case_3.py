@@ -19,15 +19,15 @@ if __name__ == '__main__':
     print('=====================================================================================================================================================')
 
     layers = 5
-    nodes = 30
-    for layer in range(2, layers):
-        for node in range(9, nodes):
+    nodes = 10
+    for layer in range(0, layers):
+        for node in range(0, nodes):
             args.n_layers = layer+1
             args.n_hidden = node+1
 
             print("======================================================= Case 3. %02d layers, %02d hidden nodes =========================================================="
                   %(args.n_layers, args.n_hidden))
-            s_result = eh.evaluations2(args, train_input, train_target, test_input, test_target)
+            s_result = eh.evaluations3(args, train_input, train_target, test_input, test_target)
             s_result = np.array(s_result)
             print('=====================================================================================================================================================')
             for i, (loss, rmse) in enumerate(s_result):
@@ -37,7 +37,7 @@ if __name__ == '__main__':
             print('=====================================================================================================================================================')
 
     # print("======================================================= Case 3. =====================================================================================")
-    # s_result = eh.evaluations2(args, s2_train_input, s4_train_target, s2_test_input, s4_test_target)
+    # s_result = eh.evaluations2(args, train_input, train_target, test_input, test_target)
     # s_result = np.array(s_result)
     # print('=====================================================================================================================================================')
     # for i, (loss, rmse) in enumerate(s_result):

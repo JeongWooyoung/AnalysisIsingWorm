@@ -4,7 +4,9 @@ import tensorflow as tf
 
 from datetime import datetime
 
+import arguments
 import file_handler as fh
+import view_handler as vh
 
 #########################################################################################################
 ################################### Retain RNN ##########################################################
@@ -54,6 +56,72 @@ class LSTM(object):
                 start = datetime.now()
         return np.mean(losses)
 
+    def train2(self, data, target, evals, compares):
+        data_size = data.shape[0]
+        train_count = int(np.ceil(data_size / self.args.batch_size))
+
+        # sh = np.arange(data.shape[0])
+        # np.random.shuffle(sh)
+        #
+        # train_data = data[sh]
+        # target = target[sh]
+        train_data = data
+
+        test_data = train_data[:1000]
+        test_target = target[:1000]
+
+        args = arguments.parse_args()
+        results = []
+        check_time = int(self.args.num_epochs/10)
+        con_check_time = check_time-1
+        start = datetime.now()
+        for i in range(1, self.args.num_epochs+1):
+            losses = []
+            for t in range(train_count):
+                s = self.args.batch_size * t
+                e = s + self.args.batch_size
+
+                train_data_ = train_data[s:e]
+                train_target_ = target[s:e]
+
+                _, loss = self.sess.run((self.train_step, self.loss), feed_dict={self.input: train_data_
+                                                                    , self.target: train_target_
+                                                                    , self.KeepProbCell: self.keep_prob_cell
+                                                                    , self.KeepProbLayer: self.keep_prob_layer})
+                losses.append(np.mean(np.nan_to_num(loss)))
+            if i%10000 == 0:
+                loss = np.mean(np.nan_to_num(loss))
+                predicts, rmse = self.sess.run((self.prediction, self.rmse), feed_dict={self.input: test_data, self.target: test_target, self.KeepProbCell: 1, self.KeepProbLayer: 1})
+                # accuracy, precision, recall, f1 = eh.evaluatePredictions(test_target, predicts)
+                print('=====================================================================================================================================================')
+                # print('epoch %d: loss %03.5f rmse: %03.5f accuracy : %.4f, precision : %.4f, recall : %.4f, f1-measure : %.4f' % (i+1, np.mean(losses), rmse, accuracy, precision, recall, f1))
+                print('epoch %d: loss %03.9f rmse: %03.5f' % (i, loss, rmse))
+                print(datetime.now()-start)
+                print('=====================================================================================================================================================')
+
+                args.n_layers = self.args.n_layers
+                args.n_hidden = self.args.n_hidden
+                args.batch_size = self.args.batch_size
+                args.file_cnt = self.args.file_cnt
+                args.num_epochs = i
+
+                train_predicts = np.array(self.predict(train_data))
+                predicts = np.array(self.predict(evals))
+
+                fh.saveTxT(train_predicts.reshape(train_predicts.shape[0], 1), 'train_predicts/%d_%d_%d/epoch_%d' % (self.args.n_layers, self.args.n_hidden, self.args.batch_size, i + 1))
+                fh.saveTxT(predicts.reshape(predicts.shape[0], 1), 'test_predicts/%d_%d_%d/epoch_%d' % (self.args.n_layers, self.args.n_hidden, self.args.batch_size, i + 1))
+
+                fh.displayData(train_predicts, 'Train Predicts')
+                fh.displayData(predicts, 'Test Predicts')
+
+                rmse = self.evaluation(evals, predicts)
+                results.append([loss, rmse])
+
+                vh.saveScatter([train_data, evals, evals, train_data],
+                            [target, compares, predicts, train_predicts],
+                            check_size=None, args=args)
+                start = datetime.now()
+        return results
     def predict(self, data):
         predicts = self.sess.run((self.prediction), feed_dict={self.input: data, self.KeepProbCell: self.args.keep_prob_cell, self.KeepProbLayer: self.args.keep_prob_layer})
         return predicts
@@ -62,12 +130,17 @@ class LSTM(object):
         return rmse
 
     def init_session(self):
-        self.sess = tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
+        config = tf.ConfigProto(gpu_options=gpu_options)
+        # config = tf.ConfigProto()
+        # config.gpu_options.allow_growth = True
+
+        self.sess = tf.Session(config=config)
         tf.global_variables_initializer().run(session=self.sess)
         tf.local_variables_initializer().run(session=self.sess)
 
-    def generateModel(self, name, input, output_size, activation, n_layers, layer_size, reuse):
-        def rnn_cell(): return tf.contrib.rnn.BasicLSTMCell(layer_size, reuse=reuse)
+    def generateModel(self, name, input, output_size, activation, n_layers, hidden_size, reuse):
+        def rnn_cell(): return tf.contrib.rnn.BasicLSTMCell(hidden_size, activation=activation, reuse=reuse)
         # with tf.variable_scope('LSTM_'+name, reuse=reuse):
         Cell = tf.contrib.rnn.MultiRNNCell(
             [tf.contrib.rnn.DropoutWrapper(rnn_cell(), input_keep_prob=self.KeepProbCell) for _ in range(n_layers)]
@@ -90,7 +163,7 @@ class LSTM(object):
 
         e = []
         for i in range(h.get_shape()[0]) :
-            e.append(activation(tf.matmul(h[i], w) + b))
+            e.append(tf.matmul(h[i], w) + b)
         return tf.transpose(e, (1, 0, 2), name=name)
 
     def generateModels(self, input_size, output_size, step_size):
@@ -107,7 +180,7 @@ class LSTM(object):
         # generating alpha values
         self.alpha = self.generateModel(name='layers', input=self.input, output_size=1
                                                 , activation=tf.nn.elu, n_layers=self.args.n_layers
-                                                , layer_size=self.args.n_hidden, reuse=False)
+                                                , hidden_size=self.args.n_hidden, reuse=False)
 
         self.prediction = self.alpha
         # target = self.target[:,:,-1]

@@ -22,18 +22,18 @@ def parse_args(model_name = 'LSTM', results_path=os.getcwd()+'/results'):
     parser.add_argument('--results_path', type=str, default=results_path, help='File path of output images')
     parser.add_argument('--file_cnt', type=int, default=4, help='Number of data files')
 
-    parser.add_argument('--keep_prob_cell', type=float, default=.9, help='rate dropout cell')
-    parser.add_argument('--keep_prob_layer', type=float, default=.9, help='rate dropout layer')
+    parser.add_argument('--keep_prob_cell', type=float, default=1.0, help='rate dropout cell')
+    parser.add_argument('--keep_prob_layer', type=float, default=1.0, help='rate dropout layer')
 
     parser.add_argument('--n_layers', type=int, default=5, help='Number of hidden layers')
 
     parser.add_argument('--n_hidden', type=int, default=30, help='Number of hidden units')
 
-    parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate for Adam optimizer')
+    parser.add_argument('--learning_rate', type=float, default=1e-6, help='Learning rate for Adam optimizer')
 
-    parser.add_argument('--num_epochs', type=int, default=10000, help='The number of epochs to run')
+    parser.add_argument('--num_epochs', type=int, default=100000, help='The number of epochs to run')
 
-    parser.add_argument('--batch_size', type=int, default=200, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=500, help='Batch size')
     parser.add_argument('--output_size', type=int, default=1, help='Output size')
 
     args = parser.parse_args()
